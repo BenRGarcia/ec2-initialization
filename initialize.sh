@@ -115,9 +115,11 @@ npm i -g typescript
 prompt_to_continue_done "$Q_04"
 
 # Install current version of AWS CDK
-Q_05="Now we will install the AWS CDK"
+Q_05="Now we will install and bootstrap the AWS CDK"
 prompt_to_continue "$Q_05"
 npm install -g aws-cdk
+CDK_NEW_BOOTSTRAP=1
+cdk bootstrap
 prompt_to_continue_done "$Q_05"
 
 # Uninstall AWS CLI V1 if installed
