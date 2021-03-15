@@ -144,6 +144,67 @@ if [[ $AWS_CLI_VERSION != "2" ]]; then
   prompt_to_continue_done "$Q_07"
 fi
 
+Q_08="Now we will increase the size of the EBS volume"
+prompt_to_continue "$Q_08"
+# Specify the desired volume size in GiB as a command line argument. If not specified, default to 20 GiB.
+SIZE=30
+
+# Get the ID of the environment host Amazon EC2 instance.
+INSTANCEID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+
+# Get the ID of the Amazon EBS volume associated with the instance.
+VOLUMEID=$(aws ec2 describe-instances \
+  --instance-id $INSTANCEID \
+  --query "Reservations[0].Instances[0].BlockDeviceMappings[0].Ebs.VolumeId" \
+  --output text)
+
+# Resize the EBS volume.
+aws ec2 modify-volume --volume-id $VOLUMEID --size $SIZE
+
+# Wait for the resize to finish.
+while [ \
+  "$(aws ec2 describe-volumes-modifications \
+    --volume-id $VOLUMEID \
+    --filters Name=modification-state,Values="optimizing","completed" \
+    --query "length(VolumesModifications)"\
+    --output text)" != "1" ]; do
+sleep 1
+done
+
+#Check if we're on an NVMe filesystem
+if [ $(readlink -f /dev/xvda) = "/dev/xvda" ]
+then
+  # Rewrite the partition table so that the partition takes up all the space that it can.
+  sudo growpart /dev/xvda 1
+
+  # Expand the size of the file system.
+  # Check if we are on AL2
+  STR=$(cat /etc/os-release)
+  SUB="VERSION_ID=\"2\""
+  if [[ "$STR" == *"$SUB"* ]]
+  then
+    sudo xfs_growfs -d /
+  else
+    sudo resize2fs /dev/xvda1
+  fi
+
+else
+  # Rewrite the partition table so that the partition takes up all the space that it can.
+  sudo growpart /dev/nvme0n1 1
+
+  # Expand the size of the file system.
+  # Check if we're on AL2
+  STR=$(cat /etc/os-release)
+  SUB="VERSION_ID=\"2\""
+  if [[ "$STR" == *"$SUB"* ]]
+  then
+    sudo xfs_growfs -d /
+  else
+    sudo resize2fs /dev/nvme0n1p1
+  fi
+fi
+prompt_to_continue_done "$Q_08"
+
 clear_screen
 echo "Your EC2 environment has been configured."
 echo "Close this terminal window and open another before running any additional scripts."
