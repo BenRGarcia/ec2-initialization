@@ -47,7 +47,7 @@ fi
 
 clear_screen() {
   # printf "\033c"
-  echo "==================================================================================================="
+  echo "============================================================================================================================="
 }
 
 prompt_to_continue() {
@@ -101,14 +101,27 @@ fi
 Q_03="This script will now: update pip and install a git helper"
 prompt_to_continue "$Q_03"
 curl -O https://bootstrap.pypa.io/get-pip.py
-python get-pip.py --user
+python3 get-pip.py --user
 rm -rf ./get-pip.py
-python -m pip install git-remote-codecommit
+python3 -m pip install git-remote-codecommit
 prompt_to_continue_done "$Q_03"
 
+# Ensure LTS version of Node.js is installed
+Q_04="This script will now: install the current 'LTS' version of Node.js"
+CURRENT_NODE_LTS_NAME="fermium" # <= will require update to new LTS 10/2021
+EC2_NODE_VERSION=$(node --version)
+CURRENT_NODE_LTS_VERSION=$(nvm version-remote --lts=$CURRENT_NODE_LTS_NAME)
+if [[ $EC2_NODE_VERSION != "$CURRENT_NODE_LTS_VERSION" ]]; then
+  prompt_to_continue "$Q_04"
+  nvm install --lts=$CURRENT_NODE_LTS_NAME
+  nvm alias default lts/$CURRENT_NODE_LTS_NAME
+  nvm uninstall "$EC2_NODE_VERSION"
+  prompt_to_continue_done "$Q_04"
+fi
+
 # Install current version of AWS CDK
-Q_04="This script will now: install and bootstrap the AWS CDK"
-prompt_to_continue "$Q_04"
+Q_05="This script will now: install and bootstrap the AWS CDK"
+prompt_to_continue "$Q_05"
 npm install -g aws-cdk
 AWS_ACCOUNT_NUMBER=$(aws sts get-caller-identity --query Account --output text)
 if [ -z "$AWS_ACCOUNT_NUMBER" ]; then
@@ -130,20 +143,7 @@ if [ -z "$AWS_DEFAULT_REGION" ]; then
   exit 1
 fi
 cdk bootstrap "aws://$AWS_ACCOUNT_NUMBER/$AWS_DEFAULT_REGION"
-prompt_to_continue_done "$Q_04"
-
-# Ensure LTS version of Node.js is installed
-Q_05="This script will now: install the current 'LTS' version of Node.js"
-CURRENT_NODE_LTS_NAME="fermium" # <= will require update to new LTS 10/2021
-EC2_NODE_VERSION=$(node --version)
-CURRENT_NODE_LTS_VERSION=$(nvm version-remote --lts=$CURRENT_NODE_LTS_NAME)
-if [[ $EC2_NODE_VERSION != "$CURRENT_NODE_LTS_VERSION" ]]; then
-  prompt_to_continue "$Q_05"
-  nvm install --lts=$CURRENT_NODE_LTS_NAME
-  nvm alias default lts/$CURRENT_NODE_LTS_NAME
-  nvm uninstall "$EC2_NODE_VERSION"
-  prompt_to_continue_done "$Q_05"
-fi
+prompt_to_continue_done "$Q_05"
 
 # Install current version of TypeScript
 Q_06="This script will now: install TypeScript"
@@ -226,21 +226,22 @@ fi
 
 # Install AWS CLI V2 if not installed
 Q_09="This script will now: install AWS CLI V2"
+AWS_CLI_VERSION=$(aws --version | cut -d'/' -f2 | cut -c1-1)
 echo "Installed version: $AWS_CLI_VERSION"
 if [[ $AWS_CLI_VERSION != "2" ]]; then
-  prompt_to_continue "$Q_09 "
+  prompt_to_continue "$Q_09"
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
   unzip awscliv2.zip
   sudo ./aws/install
   rm -rf awscliv2.zip
   rm -rf ./aws/
+  . /usr/local/bin/aws
   prompt_to_continue_done "$Q_09"
 fi
 
-Q_10="This script will now: configure the AWS CLI V2 with your credentials"
+AWS_CLI_VERSION=$(aws --version | cut -d'/' -f2 | cut -c1-1)
+Q_10="This script will now: configure the AWS CLI V$AWS_CLI_VERSION with your credentials"
 prompt_to_continue "$Q_10"
-sudo rm -rf ~/.aws/credentials
-sudo rm -rf ~/.aws/config
 aws configure
 AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)
 AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
@@ -254,6 +255,11 @@ if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
   echo "Re-run this script and try again."
   exit 1
 fi
+echo ">>>>>>>>>>>>>>>>>>> DEBUG - aws_access_key_id is $AWS_ACCESS_KEY_ID"
+echo ">>>>>>>>>>>>>>>>>>> DEBUG - aws_secret_access_key is $AWS_SECRET_ACCESS_KEY"
+# aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+# aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+# aws configure set aws_session_token ""
 TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/TechTrainerCloud9Stack-codeCommitReadOnlyAccess982-VWL5HSK3TV97"
 {
   echo ""
