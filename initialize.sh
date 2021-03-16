@@ -145,7 +145,7 @@ if [ -z "$AWS_DEFAULT_REGION" ]; then
   echo "Re-run this script and try again."
   exit 1
 fi
-read -p 'What is your AWS account number?  ' AWS_ACCOUNT_NUMBER
+read -p 'What is your AWS account number?    ' AWS_ACCOUNT_NUMBER
 if [ -z "$AWS_ACCOUNT_NUMBER" ]; then
   echo "Error! You didn't type in your AWS account number."
   echo "Re-run this script and try again."
@@ -164,8 +164,8 @@ if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
   echo "Re-run this script and try again."
   exit 1
 fi
-rm -rf ~/.aws/credentials
-rm -rf ~/.aws/config
+sudo rm -rf ~/.aws/credentials
+sudo rm -rf ~/.aws/config
 aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
 aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
 unset AWS_SECRET_ACCESS_KEY
