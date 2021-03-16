@@ -118,6 +118,7 @@ prompt_to_continue_done "$Q_04"
 # Uninstall AWS CLI V1 if installed
 Q_05="Now we will uninstall AWS CLI V1"
 AWS_CLI_VERSION="$(echo $(aws --version) | cut -d'/' -f2 | cut -c1-1)"
+echo "Installed version: $AWS_CLI_VERSION"
 if [[ $AWS_CLI_VERSION == "1" ]]; then
   prompt_to_continue "$Q_05"
   sudo rm -rf /usr/local/aws
@@ -127,6 +128,7 @@ fi
 
 # Install AWS CLI V2 if not installed
 Q_06="Now we will install AWS CLI V2"
+echo "Installed version: $AWS_CLI_VERSION"
 if [[ $AWS_CLI_VERSION != "2" ]]; then
   prompt_to_continue "$Q_06"
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -164,21 +166,21 @@ unset AWS_SECRET_ACCESS_KEY
 prompt_to_continue_done "$Q_07"
 
 # Install current version of AWS CDK
-Q_08="Now we will install and bootstrap the AWS CDK"
+Q_08="Now we will install the AWS CDK"
 prompt_to_continue "$Q_08"
-read -p 'What is your AWS account number?    ' AWS_ACCOUNT_NUMBER
-if [ -z "$AWS_ACCOUNT_NUMBER" ]; then
-  echo "Error! You didn't type in your AWS account number."
-  echo "Re-run this script and try again."
-  exit 1
-fi
 npm install -g aws-cdk
-CDK_NEW_BOOTSTRAP=1
-AWS_DEFAULT_REGION=$(aws configure get region)
-if [ -z "$AWS_DEFAULT_REGION" ]; then
-  AWS_DEFAULT_REGION="us-east-1"
-fi
-cdk bootstrap "aws://$AWS_ACCOUNT_NUMBER/$AWS_DEFAULT_REGION"
+# read -p 'What is your AWS account number?    ' AWS_ACCOUNT_NUMBER
+# if [ -z "$AWS_ACCOUNT_NUMBER" ]; then
+#   echo "Error! You didn't type in your AWS account number."
+#   echo "Re-run this script and try again."
+#   exit 1
+# fi
+# CDK_NEW_BOOTSTRAP=1
+# AWS_DEFAULT_REGION=$(aws configure get region)
+# if [ -z "$AWS_DEFAULT_REGION" ]; then
+#   AWS_DEFAULT_REGION="us-east-1"
+# fi
+# cdk bootstrap "aws://$AWS_ACCOUNT_NUMBER/$AWS_DEFAULT_REGION"
 prompt_to_continue_done "$Q_08"
 
 Q_09="Now we will increase the size of the EBS volume"
