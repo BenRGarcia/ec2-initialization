@@ -137,42 +137,13 @@ if [[ $AWS_CLI_VERSION != "2" ]]; then
   prompt_to_continue_done "$Q_07"
 fi
 
-Q_08="Now we will configure the AWS CLI V2. Be prepared to enter your AWS region (us-east-1), account number, Access Key ID, and AWS Secret Access Key"
+Q_08="Now we will configure the AWS CLI V2"
 prompt_to_continue "$Q_08"
-read -p 'What is your preferred AWS region?  ' AWS_DEFAULT_REGION
-if [ -z "$AWS_DEFAULT_REGION" ]; then
-  echo "Error! You didn't type in your preferred AWS region."
-  echo "Re-run this script and try again."
-  exit 1
-fi
-read -p 'What is your AWS account number?    ' AWS_ACCOUNT_NUMBER
-if [ -z "$AWS_ACCOUNT_NUMBER" ]; then
-  echo "Error! You didn't type in your AWS account number."
-  echo "Re-run this script and try again."
-  exit 1
-fi
-read -p 'What is your AWS Access Key ID?     ' AWS_ACCESS_KEY_ID
-if [ -z "$AWS_ACCESS_KEY_ID" ]; then
-  echo "Error! You didn't type in your AWS Access Key ID."
-  echo "Re-run this script and try again."
-  exit 1
-fi
-read -sp 'What is your AWS Secret Access Key? ' AWS_SECRET_ACCESS_KEY
-echo ""
-if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-  echo "Error! You didn't type in your AWS Secret Access Key."
-  echo "Re-run this script and try again."
-  exit 1
-fi
 sudo rm -rf ~/.aws/credentials
 sudo rm -rf ~/.aws/config
-aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-unset AWS_SECRET_ACCESS_KEY
-aws configure set default.region $AWS_DEFAULT_REGION
+aws configure
 TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/TechTrainerCloud9Stack-codeCommitReadOnlyAccess982-VWL5HSK3TV97"
-aws configure set profile.technical-trainer.role_arn "$TECHNICAL_TRAINER_ROLE_ARN"
-aws configure set profile.technical-trainer.source_profile default
+aws configure set role_arn "$TECHNICAL_TRAINER_ROLE_ARN"
 aws sts assume-role --role-arn "$TECHNICAL_TRAINER_ROLE_ARN" --role-session-name AWSCLI-Session
 prompt_to_continue_done "$Q_08"
 
