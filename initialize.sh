@@ -156,10 +156,11 @@ if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
 fi
 TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/TechTrainerCloud9Stack-codeCommitReadOnlyAccess982-VWL5HSK3TV97"
 echo "[technical-trainer]" >> ~/.aws/credentials
-echo "$AWS_ACCESS_KEY_ID" >>  ~/.aws/credentials
-echo "$AWS_SECRET_ACCESS_KEY" >>  ~/.aws/credentials
+echo "aws_access_key_id = $AWS_ACCESS_KEY_ID" >>  ~/.aws/credentials
+echo "aws_secret_access_key = $AWS_SECRET_ACCESS_KEY" >>  ~/.aws/credentials
 echo "source_profile = default" >> ~/.aws/credentials
 echo "role_arn = $TECHNICAL_TRAINER_ROLE_ARN" >> ~/.aws/credentials
+unset AWS_SECRET_ACCESS_KEY
 prompt_to_continue_done "$Q_07"
 
 # Install current version of AWS CDK
