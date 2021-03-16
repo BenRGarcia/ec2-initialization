@@ -155,7 +155,7 @@ fi
 TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/TechTrainerCloud9Stack-codeCommitReadOnlyAccess982-VWL5HSK3TV97"
 aws configure --profile technical-trainer
 aws configure set role_arn "$TECHNICAL_TRAINER_ROLE_ARN" --profile technical-trainer
-aws configure source_profile --profile technical-trainer
+aws configure set source_profile default --profile technical-trainer
 aws sts assume-role --role-arn "$TECHNICAL_TRAINER_ROLE_ARN" --role-session-name AWSCLI-Session
 prompt_to_continue_done "$Q_08b"
 
