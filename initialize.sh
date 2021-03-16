@@ -116,56 +116,55 @@ npm i -g typescript
 prompt_to_continue_done "$Q_04"
 
 # Uninstall AWS CLI V1 if installed
-Q_06="Now we will uninstall AWS CLI V1"
+Q_05="Now we will uninstall AWS CLI V1"
 AWS_CLI_VERSION="$(echo $(aws --version) | cut -d'/' -f2 | cut -c1-1)"
 if [[ $AWS_CLI_VERSION == "1" ]]; then
-  prompt_to_continue "$Q_06"
+  prompt_to_continue "$Q_05"
   sudo rm -rf /usr/local/aws
   sudo rm /usr/local/bin/aws
-  prompt_to_continue_done "$Q_06"
+  prompt_to_continue_done "$Q_05"
 fi
 
 # Install AWS CLI V2 if not installed
-Q_07="Now we will install AWS CLI V2"
+Q_06="Now we will install AWS CLI V2"
 if [[ $AWS_CLI_VERSION != "2" ]]; then
-  prompt_to_continue "$Q_07"
+  prompt_to_continue "$Q_06"
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
   unzip awscliv2.zip
   sudo ./aws/install
   rm -rf awscliv2.zip
   rm -rf ./aws/
-  prompt_to_continue_done "$Q_07"
+  prompt_to_continue_done "$Q_06"
 fi
 
-Q_08a="Now we will configure the AWS CLI V2 with your credentials"
-prompt_to_continue "$Q_08a"
+Q_07="Now we will configure the AWS CLI V2 with your credentials"
+prompt_to_continue "$Q_07"
 sudo rm -rf ~/.aws/credentials
 sudo rm -rf ~/.aws/config
 aws configure
-prompt_to_continue_done "$Q_08a"
+TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/TechTrainerCloud9Stack-codeCommitReadOnlyAccess982-VWL5HSK3TV97"
+echo "[technical-trainer]" >> ~/.aws/credentials
+echo "source_profile = default" >> ~/.aws/credentials
+echo "role_arn = $TECHNICAL_TRAINER_ROLE_ARN" >> ~/.aws/credentials
+prompt_to_continue_done "$Q_07"
 
-Q_08b="Now we will configure the AWS CLI V2 with the 'technical-trainer' IAM Role. Be prepared to re-enter the same AWS credentials as before"
-prompt_to_continue "$Q_08b"
+# Install current version of AWS CDK
+Q_08="Now we will install and bootstrap the AWS CDK"
+prompt_to_continue "$Q_08"
 read -p 'What is your AWS account number?    ' AWS_ACCOUNT_NUMBER
 if [ -z "$AWS_ACCOUNT_NUMBER" ]; then
   echo "Error! You didn't type in your AWS account number."
   echo "Re-run this script and try again."
   exit 1
 fi
-TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/TechTrainerCloud9Stack-codeCommitReadOnlyAccess982-VWL5HSK3TV97"
-aws configure --profile technical-trainer
-aws configure set role_arn "$TECHNICAL_TRAINER_ROLE_ARN" --profile technical-trainer
-aws configure set source_profile default --profile technical-trainer
-aws sts assume-role --role-arn "$TECHNICAL_TRAINER_ROLE_ARN" --role-session-name AWSCLI-Session
-prompt_to_continue_done "$Q_08b"
-
-# Install current version of AWS CDK
-Q_05="Now we will install and bootstrap the AWS CDK"
-prompt_to_continue "$Q_05"
 npm install -g aws-cdk
 CDK_NEW_BOOTSTRAP=1
+AWS_DEFAULT_REGION=$(aws configure get region)
+if [ -z "$AWS_DEFAULT_REGION" ]; then
+  AWS_DEFAULT_REGION="us-east-1"
+fi
 cdk bootstrap "aws://$AWS_ACCOUNT_NUMBER/$AWS_DEFAULT_REGION"
-prompt_to_continue_done "$Q_05"
+prompt_to_continue_done "$Q_08"
 
 Q_09="Now we will increase the size of the EBS volume"
 prompt_to_continue "$Q_09"
