@@ -115,14 +115,6 @@ prompt_to_continue "$Q_04"
 npm i -g typescript
 prompt_to_continue_done "$Q_04"
 
-# Install current version of AWS CDK
-Q_05="Now we will install and bootstrap the AWS CDK"
-prompt_to_continue "$Q_05"
-npm install -g aws-cdk
-CDK_NEW_BOOTSTRAP=1
-cdk bootstrap
-prompt_to_continue_done "$Q_05"
-
 # Uninstall AWS CLI V1 if installed
 Q_06="Now we will uninstall AWS CLI V1"
 AWS_CLI_VERSION="$(echo $(aws --version) | cut -d'/' -f2 | cut -c1-1)"
@@ -145,11 +137,17 @@ if [[ $AWS_CLI_VERSION != "2" ]]; then
   prompt_to_continue_done "$Q_07"
 fi
 
-Q_08="Now we will configure the AWS CLI V2. Be prepared to enter your AWS Access Key ID and AWS Secret Access Key"
+Q_08="Now we will configure the AWS CLI V2. Be prepared to enter your AWS region (us-east-1), account number, Access Key ID, and AWS Secret Access Key"
 prompt_to_continue "$Q_08"
 read -p 'What is your preferred AWS region?  ' AWS_DEFAULT_REGION
 if [ -z "$AWS_DEFAULT_REGION" ]; then
   echo "Error! You didn't type in your preferred AWS region."
+  echo "Re-run this script and try again."
+  exit 1
+fi
+read -p 'What is your AWS account number?  ' AWS_ACCOUNT_NUMBER
+if [ -z "$AWS_ACCOUNT_NUMBER" ]; then
+  echo "Error! You didn't type in your AWS account number."
   echo "Re-run this script and try again."
   exit 1
 fi
@@ -178,9 +176,17 @@ aws configure set profile.technical-trainer.source_profile default
 aws sts assume-role --role-arn "$TECHNICAL_TRAINER_ROLE_ARN" --role-session-name AWSCLI-Session
 prompt_to_continue_done "$Q_08"
 
+# Install current version of AWS CDK
+Q_05="Now we will install and bootstrap the AWS CDK"
+prompt_to_continue "$Q_05"
+npm install -g aws-cdk
+CDK_NEW_BOOTSTRAP=1
+cdk bootstrap "aws://$AWS_ACCOUNT_NUMBER/$AWS_DEFAULT_REGION"
+prompt_to_continue_done "$Q_05"
+
 Q_09="Now we will increase the size of the EBS volume"
 prompt_to_continue "$Q_09"
-# Specify the desired volume size in GiB as a command line argument. If not specified, default to 20 GiB.
+# Specify the desired volume size in GiB as a command line argument.
 SIZE=30
 
 # Get the ID of the environment host Amazon EC2 instance.
