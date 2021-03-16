@@ -76,6 +76,7 @@ prompt_to_continue() {
 prompt_to_continue_done() {
   clear_screen
   echo "$1."
+  echo ""
   read -p "Done. Press enter to continue."
 }
 
@@ -144,8 +145,41 @@ if [[ $AWS_CLI_VERSION != "2" ]]; then
   prompt_to_continue_done "$Q_07"
 fi
 
-Q_08="Now we will increase the size of the EBS volume"
+Q_08="Now we will configure the AWS CLI V2. Be prepared to enter your AWS Access Key ID and AWS Secret Access Key"
 prompt_to_continue "$Q_08"
+read -p 'What is your preferred AWS region?  ' AWS_DEFAULT_REGION
+if [ -z "$AWS_DEFAULT_REGION" ]; then
+  echo "Error! You didn't type in your preferred AWS region."
+  echo "Re-run this script and try again."
+  exit 1
+fi
+read -p 'What is your AWS Access Key ID?     ' AWS_ACCESS_KEY_ID
+if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+  echo "Error! You didn't type in your AWS Access Key ID."
+  echo "Re-run this script and try again."
+  exit 1
+fi
+read -sp 'What is your AWS Secret Access Key? ' AWS_SECRET_ACCESS_KEY
+echo ""
+if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+  echo "Error! You didn't type in your AWS Secret Access Key."
+  echo "Re-run this script and try again."
+  exit 1
+fi
+rm -rf ~/.aws/credentials
+rm -rf ~/.aws/config
+aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+unset AWS_SECRET_ACCESS_KEY
+aws configure set default.region $AWS_DEFAULT_REGION
+TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/TechTrainerCloud9Stack-codeCommitReadOnlyAccess982-VWL5HSK3TV97"
+aws configure set profile.technical-trainer.role_arn "$TECHNICAL_TRAINER_ROLE_ARN"
+aws configure set profile.technical-trainer.source_profile default
+aws sts assume-role --role-arn "$TECHNICAL_TRAINER_ROLE_ARN" --role-session-name AWSCLI-Session
+prompt_to_continue_done "$Q_08"
+
+Q_09="Now we will increase the size of the EBS volume"
+prompt_to_continue "$Q_09"
 # Specify the desired volume size in GiB as a command line argument. If not specified, default to 20 GiB.
 SIZE=30
 
@@ -203,7 +237,20 @@ else
     sudo resize2fs /dev/nvme0n1p1
   fi
 fi
-prompt_to_continue_done "$Q_08"
+prompt_to_continue_done "$Q_09"
+
+Q_10="Now we will update pip"
+prompt_to_continue "$Q_10"
+curl -O https://bootstrap.pypa.io/get-pip.py
+python get-pip.py --user
+rm -rf ./get-pip.py
+prompt_to_continue_done "$Q_10"
+
+Q_11"Now we will clone all available repositories"
+prompt_to_continue "$Q_11"
+python -m pip install git-remote-codecommit
+git clone codecommit://technical-trainer@aai-architecting-on-aws ~/environment/src/aai-architecting-on-aws
+prompt_to_continue_done "$Q_11"
 
 clear_screen
 echo "Your EC2 environment has been configured."
