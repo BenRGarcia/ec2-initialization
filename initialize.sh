@@ -142,8 +142,22 @@ prompt_to_continue "$Q_07"
 sudo rm -rf ~/.aws/credentials
 sudo rm -rf ~/.aws/config
 aws configure
+AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)
+AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
+if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+  echo "Error! You didn't type in your AWS access key id."
+  echo "Re-run this script and try again."
+  exit 1
+fi
+if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+  echo "Error! You didn't type in your AWS secret access key."
+  echo "Re-run this script and try again."
+  exit 1
+fi
 TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/TechTrainerCloud9Stack-codeCommitReadOnlyAccess982-VWL5HSK3TV97"
 echo "[technical-trainer]" >> ~/.aws/credentials
+echo "$AWS_ACCESS_KEY_ID" >>  ~/.aws/credentials
+echo "$AWS_SECRET_ACCESS_KEY" >>  ~/.aws/credentials
 echo "source_profile = default" >> ~/.aws/credentials
 echo "role_arn = $TECHNICAL_TRAINER_ROLE_ARN" >> ~/.aws/credentials
 prompt_to_continue_done "$Q_07"
@@ -237,6 +251,7 @@ prompt_to_continue_done "$Q_10"
 Q_11"Now we will clone all available repositories"
 prompt_to_continue "$Q_11"
 python -m pip install git-remote-codecommit
+sts assume-role --role-arn "$TECHNICAL_TRAINER_ROLE_ARN" --role-session-name AWSCLI-Session
 git clone codecommit://technical-trainer@aai-architecting-on-aws ~/environment/src/aai-architecting-on-aws
 prompt_to_continue_done "$Q_11"
 
