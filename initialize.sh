@@ -137,15 +137,27 @@ if [[ $AWS_CLI_VERSION != "2" ]]; then
   prompt_to_continue_done "$Q_07"
 fi
 
-Q_08="Now we will configure the AWS CLI V2"
-prompt_to_continue "$Q_08"
+Q_08a="Now we will configure the AWS CLI V2 with your credentials"
+prompt_to_continue "$Q_08a"
 sudo rm -rf ~/.aws/credentials
 sudo rm -rf ~/.aws/config
 aws configure
+prompt_to_continue_done "$Q_08a"
+
+Q_08b="Now we will configure the AWS CLI V2 with the 'technical-trainer' IAM Role. Be prepared to re-enter the same AWS credentials as before"
+prompt_to_continue "$Q_08b"
+read -p 'What is your AWS account number?    ' AWS_ACCOUNT_NUMBER
+if [ -z "$AWS_ACCOUNT_NUMBER" ]; then
+  echo "Error! You didn't type in your AWS account number."
+  echo "Re-run this script and try again."
+  exit 1
+fi
 TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/TechTrainerCloud9Stack-codeCommitReadOnlyAccess982-VWL5HSK3TV97"
-aws configure set role_arn "$TECHNICAL_TRAINER_ROLE_ARN"
+aws configure --profile technical-trainer
+aws configure set role_arn "$TECHNICAL_TRAINER_ROLE_ARN" --profile technical-trainer
+aws configure source_profile --profile technical-trainer
 aws sts assume-role --role-arn "$TECHNICAL_TRAINER_ROLE_ARN" --role-session-name AWSCLI-Session
-prompt_to_continue_done "$Q_08"
+prompt_to_continue_done "$Q_08b"
 
 # Install current version of AWS CDK
 Q_05="Now we will install and bootstrap the AWS CDK"
