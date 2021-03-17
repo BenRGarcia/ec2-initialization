@@ -129,6 +129,15 @@ AWS_TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/AwsTechnicalTrain
     echo "source_profile = default"
 } >>~/.aws/config
 
+{
+    echo "#!/bin/bash"
+    echo ""
+    echo "git clone codecommit::us-west-2://${AWS_TECHNICAL_TRAINER_ROLE_NAME}@aai-architecting-on-aws"
+    echo "cd aai-architecting-on-aws"
+    echo "npm ci"
+} >~/environment/get-aai-architecting-on-aws.sh
+chmod +x ~/environment/get-aai-architecting-on-aws.sh
+
 ###############################################################################
 # Next Step Instructions
 ###############################################################################
@@ -191,7 +200,7 @@ echo ""
 echo "       Q: How do we do this?"
 echo "       A: 4.1 In your **NEW** terminal window, run the command:"
 echo ""
-echo "             $ git clone codecommit::us-west-2://${AWS_TECHNICAL_TRAINER_ROLE_NAME}@aai-architecting-on-aws "
+echo "             $ ./get-aai-architecting-on-aws.sh"
 echo ""
 echo "############################################################################################"
 echo ""
