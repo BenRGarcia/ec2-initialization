@@ -40,9 +40,11 @@ npm i -g typescript@"~3.9.9" # AWS CDK v1.94.0 TypeScript version
 ###############################################################################
 npm install -g aws-cdk
 AWS_ACCOUNT_NUMBER=$(aws sts get-caller-identity --query Account --output text)
-AWS_DEFAULT_REGION=$(aws configure get region)
+_AWS_DEFAULT_REGION=$AWS_REGION
+__AWS_DEFAULT_REGION=${_AWS_DEFAULT_REGION:-$(aws configure get region)}
+AWS_DEFAULT_REGION=${__AWS_DEFAULT_REGION:-us-east-1}
 export CDK_NEW_BOOTSTRAP=1
-cdk bootstrap "aws://$AWS_ACCOUNT_NUMBER/$AWS_DEFAULT_REGION"
+cdk bootstrap --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess "aws://$AWS_ACCOUNT_NUMBER/$AWS_DEFAULT_REGION"
 
 ###############################################################################
 # Increase size of EBS volume to accommodate AWS CodeCommit repository clones
