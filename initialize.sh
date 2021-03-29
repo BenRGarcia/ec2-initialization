@@ -42,7 +42,8 @@ npm install -g aws-cdk
 AWS_ACCOUNT_NUMBER=$(aws sts get-caller-identity --query Account --output text)
 _AWS_DEFAULT_REGION=$AWS_REGION
 __AWS_DEFAULT_REGION=${_AWS_DEFAULT_REGION:-$(aws configure get region)}
-AWS_DEFAULT_REGION=${__AWS_DEFAULT_REGION:-us-east-1}
+___AWS_DEFAULT_REGION=${__AWS_DEFAULT_REGION:-$(curl http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/[a-z]$//')}
+AWS_DEFAULT_REGION=${___AWS_DEFAULT_REGION:-us-east-1}
 export CDK_NEW_BOOTSTRAP=1
 cdk bootstrap --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess "aws://$AWS_ACCOUNT_NUMBER/$AWS_DEFAULT_REGION"
 
