@@ -116,31 +116,36 @@ fi
 ###############################################################################
 # Uninstall AWS CLI v1
 ###############################################################################
-sudo rm -rf /usr/local/aws
-sudo rm /usr/local/bin/aws
+AWS_CLI_VERSION=$(aws --version 2>&1 | cut -d'/' -f2 | cut -c1-1)
+if [[ $AWS_CLI_VERSION == "1" ]]; then
+    sudo rm -rf /usr/local/aws
+    sudo rm /usr/local/bin/aws
+fi
 
 ###############################################################################
 # Install, configure AWS CLI v2
 ###############################################################################
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install
-rm -rf awscliv2.zip
-rm -rf ./aws/
-AWS_TECHNICAL_TRAINER_ROLE_NAME="AwsTechnicalTrainerRole"
-AWS_TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/AwsTechnicalTrainerRole"
-{
-    echo "[default]"
-    echo "output = json"
-    echo "account = $AWS_ACCOUNT_NUMBER"
-    echo ""
-    echo "[profile $AWS_TECHNICAL_TRAINER_ROLE_NAME]"
-    echo "region = $AWS_DEFAULT_REGION"
-    echo "role_arn = $AWS_TECHNICAL_TRAINER_ROLE_ARN"
-    echo "output = json"
-    echo "account = 403112560303"
-    echo "source_profile = default"
-} >>~/.aws/config
+if [[ $AWS_CLI_VERSION != "2" ]]; then
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
+    rm -rf awscliv2.zip
+    rm -rf ./aws/
+    AWS_TECHNICAL_TRAINER_ROLE_NAME="AwsTechnicalTrainerRole"
+    AWS_TECHNICAL_TRAINER_ROLE_ARN="arn:aws:iam::403112560303:role/AwsTechnicalTrainerRole"
+    {
+        echo "[default]"
+        echo "output = json"
+        echo "account = $AWS_ACCOUNT_NUMBER"
+        echo ""
+        echo "[profile $AWS_TECHNICAL_TRAINER_ROLE_NAME]"
+        echo "region = $AWS_DEFAULT_REGION"
+        echo "role_arn = $AWS_TECHNICAL_TRAINER_ROLE_ARN"
+        echo "output = json"
+        echo "account = 403112560303"
+        echo "source_profile = default"
+    } >>~/.aws/config
+fi
 
 {
     echo "#!/bin/bash"
