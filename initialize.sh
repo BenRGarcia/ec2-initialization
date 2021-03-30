@@ -25,9 +25,12 @@ CURRENT_NODE_LTS_NAME="fermium" # <= will require update to new LTS 10/2021
 EC2_NODE_VERSION=$(node --version)
 CURRENT_NODE_LTS_VERSION=$(nvm version-remote --lts=$CURRENT_NODE_LTS_NAME)
 if [[ $EC2_NODE_VERSION != "$CURRENT_NODE_LTS_VERSION" ]]; then
+    echo "Installing current Node.js LTS version"
     nvm install --lts=$CURRENT_NODE_LTS_NAME
     nvm alias default lts/$CURRENT_NODE_LTS_NAME
     nvm uninstall "$EC2_NODE_VERSION"
+else
+    echo "Skipping Node.js LTS version install... already installed"
 fi
 
 ###############################################################################
@@ -50,68 +53,68 @@ cdk bootstrap --cloudformation-execution-policies arn:aws:iam::aws:policy/Admini
 ###############################################################################
 # Increase size of EBS volume to accommodate AWS CodeCommit repository clones
 ###############################################################################
-# EBS_VOLUME_SIZE=30
-# # Get the ID of the environment host Amazon EC2 instance.
-# INSTANCEID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+EBS_VOLUME_SIZE=30
+# Get the ID of the environment host Amazon EC2 instance.
+INSTANCEID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 
-# # Get the ID of the Amazon EBS volume associated with the instance.
-# VOLUMEID=$(aws ec2 describe-instances \
-#     --instance-id "$INSTANCEID" \
-#     --query "Reservations[0].Instances[0].BlockDeviceMappings[0].Ebs.VolumeId" \
-#     --output text)
+# Get the ID of the Amazon EBS volume associated with the instance.
+VOLUMEID=$(aws ec2 describe-instances \
+    --instance-id "$INSTANCEID" \
+    --query "Reservations[0].Instances[0].BlockDeviceMappings[0].Ebs.VolumeId" \
+    --output text)
 
-# CURRENT_VOLUME_SIZE=$(aws ec2 describe-volumes \
-#     --volume-ids "$VOLUMEID" \
-#     --query "Volumes[0].Size" \
-#     --output text)
+CURRENT_VOLUME_SIZE=$(aws ec2 describe-volumes \
+    --volume-ids "$VOLUMEID" \
+    --query "Volumes[0].Size" \
+    --output text)
 
-# if [[ $EBS_VOLUME_SIZE != "$CURRENT_VOLUME_SIZE" ]]; then
-#     echo "Resizing the volume"
-#     # Resize the EBS volume.
-#     aws ec2 modify-volume --volume-id "$VOLUMEID" --size "$EBS_VOLUME_SIZE"
+if [[ $EBS_VOLUME_SIZE != "$CURRENT_VOLUME_SIZE" ]]; then
+    echo "Resizing the volume"
+    # Resize the EBS volume.
+    aws ec2 modify-volume --volume-id "$VOLUMEID" --size "$EBS_VOLUME_SIZE"
 
-#     # Wait for the resize to finish.
-#     while [ \
-#         "$(aws ec2 describe-volumes-modifications \
-#             --volume-id "$VOLUMEID" \
-#             --filters Name=modification-state,Values="optimizing","completed" \
-#             --query "length(VolumesModifications)" \
-#             --output text)" != "1" ]; do
-#         sleep 1
-#     done
+    # Wait for the resize to finish.
+    while [ \
+        "$(aws ec2 describe-volumes-modifications \
+            --volume-id "$VOLUMEID" \
+            --filters Name=modification-state,Values="optimizing","completed" \
+            --query "length(VolumesModifications)" \
+            --output text)" != "1" ]; do
+        sleep 1
+    done
 
-#     # Check if we're on an NVMe filesystem
-#     if [ "$(readlink -f /dev/xvda)" = "/dev/xvda" ]; then
-#         # Rewrite the partition table so that the partition takes up all the space that it can.
-#         sudo growpart /dev/xvda 1
+    # Check if we're on an NVMe filesystem
+    if [ "$(readlink -f /dev/xvda)" = "/dev/xvda" ]; then
+        # Rewrite the partition table so that the partition takes up all the space that it can.
+        sudo growpart /dev/xvda 1
 
-#         # Expand the size of the file system.
-#         # Check if we are on AL2
-#         STR=$(cat /etc/os-release)
-#         SUB="VERSION_ID=\"2\""
-#         if [[ "$STR" == *"$SUB"* ]]; then
-#             sudo xfs_growfs -d /
-#         else
-#             sudo resize2fs /dev/xvda1
-#         fi
+        # Expand the size of the file system.
+        # Check if we are on AL2
+        STR=$(cat /etc/os-release)
+        SUB="VERSION_ID=\"2\""
+        if [[ "$STR" == *"$SUB"* ]]; then
+            sudo xfs_growfs -d /
+        else
+            sudo resize2fs /dev/xvda1
+        fi
 
-#     else
-#         # Rewrite the partition table so that the partition takes up all the space that it can.
-#         sudo growpart /dev/nvme0n1 1
+    else
+        # Rewrite the partition table so that the partition takes up all the space that it can.
+        sudo growpart /dev/nvme0n1 1
 
-#         # Expand the size of the file system.
-#         # Check if we're on AL2
-#         STR=$(cat /etc/os-release)
-#         SUB="VERSION_ID=\"2\""
-#         if [[ "$STR" == *"$SUB"* ]]; then
-#             sudo xfs_growfs -d /
-#         else
-#             sudo resize2fs /dev/nvme0n1p1
-#         fi
-#     fi
-# else
-#     echo "Skipping volume resize"
-# fi
+        # Expand the size of the file system.
+        # Check if we're on AL2
+        STR=$(cat /etc/os-release)
+        SUB="VERSION_ID=\"2\""
+        if [[ "$STR" == *"$SUB"* ]]; then
+            sudo xfs_growfs -d /
+        else
+            sudo resize2fs /dev/nvme0n1p1
+        fi
+    fi
+else
+    echo "Skipping volume resize... already resized"
+fi
 
 ###############################################################################
 # Uninstall AWS CLI v1
